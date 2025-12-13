@@ -20,9 +20,6 @@ import { ToyStore } from '../../../store';
 }
   `,
   styles: `
-    host: {
-      class: 'block',
-    }
   `,
 })
 export class StockStatus {
