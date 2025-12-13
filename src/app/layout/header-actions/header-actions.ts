@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { MatButton, MatIconButton } from '@angular/material/button'
 import { MatIcon } from '@angular/material/icon'
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { MatBadge } from '@angular/material/badge'
 import { ToyStore } from '../../store';
 import { AuthStore } from '../../auth-store';
@@ -10,6 +10,7 @@ import { MatDivider, MatDividerModule } from "@angular/material/divider";
 import { MatMenu, MatMenuTrigger } from '@angular/material/menu'
 import { MatDialog } from '@angular/material/dialog';
 import { SignUpDialog } from '../../components/sign-up-dialog/sign-up-dialog';
+import { NavigatorService } from '../../services/navigate.service';
 
 @Component({
   selector: 'app-header-actions',
@@ -38,7 +39,7 @@ import { SignUpDialog } from '../../components/sign-up-dialog/sign-up-dialog';
       </button>
 
       <mat-menu #userMenu="matMenu" xPosition="before">
-        <div class="flex flex-col px-3 min-w-[200px]  cursor-pointer hover:underline" [routerLink]="['/profile']">
+        <div class="flex flex-col px-3 min-w-[200px]  cursor-pointer hover:underline" (click)="goToProfile()">
             <span class="text-sm font-medium">{{auth.user()?.name}}</span>
             <span class="text-xs text-gray-500">{{auth.user()?.email}}</span>
         </div>
@@ -60,6 +61,13 @@ export class HeaderActions {
   store = inject(ToyStore)
   auth = inject(AuthStore)
   matDialog = inject(MatDialog)
+  navigator = inject(NavigatorService)
+  router = inject(Router)
+
+  goToProfile() {
+    this.navigator.save(this.router.url)
+    this.router.navigateByUrl('/profile')
+  }
 
   getInitials(name: string | undefined): string {
     if (!name) return '';
