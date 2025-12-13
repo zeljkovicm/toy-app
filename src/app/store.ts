@@ -26,6 +26,7 @@ export type ToyState = {
         address: string
         city: string
         zip: string
+        paymentType?: 'visa' | 'mastercard' | 'cash'
     } | null
     orderList: OrderModel[]
 }
@@ -176,7 +177,8 @@ export const ToyStore = signalStore(
                 zip: checkout.zip,
                 total: store.cartItems().reduce((acc, item) => acc + item.quantity * item.product.price, 0),
                 items: store.cartItems(),
-                paymentStatus: 'success',
+                paymentType: checkout.paymentType!,
+                paymentStatus: checkout.paymentType === 'cash' ? 'pending' : 'success',
                 createdAt: new Date().toISOString()
             }
             const updatedOrders = [...store.orderList(), order]
@@ -193,7 +195,19 @@ export const ToyStore = signalStore(
         }),
         clearCheckoutForm: () => {
             patchState(store, { checkoutForm: null })
-        }
+        },
+        setPaymentType: signalMethod<'visa' | 'mastercard' | 'cash'>((paymentType) => {
+            const current = store.checkoutForm()
+
+            if (!current) return
+
+            patchState(store, {
+                checkoutForm: {
+                    ...current,
+                    paymentType,
+                }
+            })
+        })
 
     }))
 )

@@ -11,6 +11,7 @@ export interface OrderModel {
     zip: string
     total: number
     items: CartModel[]
+    paymentType: string
     paymentStatus: 'success' | 'failure' | 'pending' | 'canceled'
     createdAt: string
 }

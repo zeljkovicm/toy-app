@@ -4,7 +4,7 @@ import { BackButton } from "../../components/back-button/back-button";
 import { NavigatorService } from '../../services/navigate.service';
 import { Router, RouterLink } from '@angular/router';
 import { MatCard, MatCardHeader, MatCardTitle, MatCardSubtitle, MatCardContent } from '@angular/material/card'
-import { CurrencyPipe, DatePipe, TitleCasePipe } from '@angular/common';
+import { CommonModule, CurrencyPipe, DatePipe, TitleCasePipe } from '@angular/common';
 import { MatDivider } from "@angular/material/divider";
 import { MatList, MatListItem } from "@angular/material/list";
 import { ToyStore } from '../../store';
@@ -16,7 +16,7 @@ import { MatButton } from '@angular/material/button';
 
 @Component({
   selector: 'app-profile',
-  imports: [RouterLink, MatButton, BackButton, MatCard, MatCardHeader, MatCardTitle, MatCardSubtitle, DatePipe, TitleCasePipe, MatAccordion, MatExpansionPanel, MatExpansionPanelHeader, MatIcon],
+  imports: [CommonModule, RouterLink, MatButton, BackButton, MatCard, MatCardHeader, MatCardTitle, MatCardSubtitle, DatePipe, TitleCasePipe, MatAccordion, MatExpansionPanel, MatExpansionPanelHeader, MatIcon],
   template: `
     <div class="mx-auto max-w-[1200px] py-6">
       <app-back-button class="mb-6" [navigateTo]="navigator.get()" label="Nazad" />
@@ -56,12 +56,28 @@ import { MatButton } from '@angular/material/button';
                   ID: #{{ order.id }}
                 </div>
               </div>
+              <div class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold">
+                  @if(order.paymentType === 'visa'){
+                    <img src="visa.png" class="h-4">
+                  } @else if (order.paymentType === 'mastercard') {
+                    <img src="mastercard.svg" class="h-4">
+                  } @else {
+                    <img src="cash.svg" class="h-4">
+                  }
+                  {{order.paymentType | titlecase}}
+                </div>
+              <div
+                  class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold"
+                  [ngClass]="{
+                    'bg-green-100 text-green-700': order.paymentStatus === 'success',
+                    'bg-yellow-100 text-yellow-700': order.paymentStatus === 'pending',
+                    'bg-red-100 text-red-700': order.paymentStatus === 'canceled'
+                  }">
+                  {{ order.paymentStatus | titlecase }}
+                </div>
               <div class="text-right">
                 <div class="font-bold text-lg">
                   RSD {{ order.total }}
-                </div>
-                <div class="text-sm text-green-600">
-                  {{ order.paymentStatus | titlecase }} 
                 </div>
               </div>
             </div>
@@ -69,7 +85,7 @@ import { MatButton } from '@angular/material/button';
 
           <div class="space-y-4 pt-4">
             @for (item of order.items; track item.product.toyId) {
-              <div class="grid grid-cols-[3fr_1fr_1fr] gap-4 items-center">
+              <div class="grid grid-cols-[3fr_1fr_1fr_1fr] gap-4 items-center">
                 <div class="flex items-center gap-4">
                   <img [src]="item.product.imageUrl" class="w-24 h-24 rounded-lg object-cover"/>
                   <div>
@@ -82,17 +98,18 @@ import { MatButton } from '@angular/material/button';
                   </div>
                 </div>
 
-                <div class="text-center font-medium text-lg">
+                <div class="text-center font-medium text-lg flex justify-start">
                   x{{ item.quantity }}
                 </div>
 
                 <div class="text-right font-semibold text-lg">
                   RSD {{ item.quantity * item.product.price }}
                 </div>
-                <div class="text-right font-semibold text-lg">
+                <div class="flex justify-end items-center gap-3">
                   <button matButton="filled" [disabled]="order.paymentStatus !== 'success'">Oceni</button>
                   <button class="danger" matButton="outlined" [disabled]="order.paymentStatus == 'success'">Otkazi</button>
                 </div>
+                  
               </div>
             }
           </div>

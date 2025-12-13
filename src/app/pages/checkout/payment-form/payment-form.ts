@@ -1,19 +1,20 @@
-import { Component } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { MatIcon } from "@angular/material/icon";
 import { ViewPanel } from '../../../directives/view-panel';
 import { MatRadioModule, MatRadioGroup, MatRadioButton } from '@angular/material/radio';
+import { ToyStore } from '../../../store';
 
 @Component({
-  selector: 'app-payment-form',
-  imports: [ViewPanel, MatIcon, MatRadioGroup, MatRadioButton],
-  template: `
+    selector: 'app-payment-form',
+    imports: [ViewPanel, MatIcon, MatRadioGroup, MatRadioButton],
+    template: `
     <div appViewPanel>
     <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
         <mat-icon>payment</mat-icon>
         Opcije za plaćanje
     </h2>
     <div>
-        <mat-radio-group [value]="'visa'">
+        <mat-radio-group [value]="" [value]="selectedPayment()" (change)="onPaymentChange($event.value)">
             <mat-radio-button value="visa">
                 <img src="visa.png" alt="Visa" class="h-6">
             </mat-radio-button>
@@ -29,8 +30,16 @@ import { MatRadioModule, MatRadioGroup, MatRadioButton } from '@angular/material
     </div>
 </div>
   `,
-  styles: ``,
+    styles: ``,
 })
 export class PaymentForm {
+    store = inject(ToyStore)
 
+    selectedPayment = computed(() =>
+        this.store.checkoutForm()?.paymentType ?? 'visa'
+    )
+
+    onPaymentChange(value: 'visa' | 'mastercard' | 'cash') {
+        this.store.setPaymentType(value)
+    }
 }
