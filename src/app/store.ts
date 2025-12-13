@@ -20,6 +20,14 @@ export type ToyState = {
     loading: boolean
     selectedProductId: number | null
     writeReview: boolean
+    checkoutForm: {
+        name: string
+        phone: string
+        address: string
+        city: string
+        zip: string
+    } | null
+    orderList: OrderModel[]
 }
 
 export const ToyStore = signalStore(
@@ -31,7 +39,9 @@ export const ToyStore = signalStore(
         cartItems: [],
         loading: false,
         selectedProductId: null,
-        writeReview: false
+        writeReview: false,
+        checkoutForm: null,
+        orderList: []
 
     }),
     withStorageSync({
@@ -41,7 +51,7 @@ export const ToyStore = signalStore(
             cartItems,
         }),
     }),
-    withComputed(({ category, products, wishListItems, cartItems, selectedProductId }) => ({
+    withComputed(({ category, products, wishListItems, cartItems, selectedProductId, checkoutForm }) => ({
         filteredProducts: computed(() => {
             if (category() === 'svi') return products()
             return products().filter((p) => p.type.name.toLowerCase() === category().toLowerCase())
@@ -52,7 +62,8 @@ export const ToyStore = signalStore(
         }),
         wishlistCount: computed(() => wishListItems().length),
         cartCount: computed(() => cartItems().reduce((acc, item) => acc + item.quantity, 0)),
-        selectedProduct: computed(() => products().find((p) => p.toyId === selectedProductId()))
+        selectedProduct: computed(() => products().find((p) => p.toyId === selectedProductId())),
+        hasCheckoutData: computed(() => !!checkoutForm())
     })),
     withMethods((store, productService = inject(ProductService), toaster = inject(Toaster), dialog = inject(MatDialog), authStore = inject(AuthStore), router = inject(Router)) => ({
         loadProducts: () => {
@@ -147,24 +158,42 @@ export const ToyStore = signalStore(
                 })
                 return
             }
+
+            const checkout = store.checkoutForm()
+            if (!checkout) {
+                toaster.error('Popunite podatke za narudžbinu.')
+                return
+            }
             patchState(store, { loading: true })
             const order: OrderModel = {
                 id: crypto.randomUUID(),
                 userId: authStore.user()?.id!,
                 userEmail: authStore.user()?.email!,
+                name: checkout.name,
+                phone: checkout.phone,
+                address: checkout.address,
+                city: checkout.city,
+                zip: checkout.zip,
                 total: store.cartItems().reduce((acc, item) => acc + item.quantity * item.product.price, 0),
                 items: store.cartItems(),
                 paymentStatus: 'success',
                 createdAt: new Date().toISOString()
             }
+            const updatedOrders = [...store.orderList(), order]
             await new Promise((resolve) => setTimeout(resolve, 2000))
 
-            patchState(store, { loading: false, cartItems: [] })
+            patchState(store, { loading: false, cartItems: [], checkoutForm: null, orderList: updatedOrders })
             router.navigate(['/order-success'])
 
         },
         showWriteReview: () => { patchState(store, { writeReview: true }) },
         hideWriteReview: () => { patchState(store, { writeReview: false }) },
+        setCheckoutForm: signalMethod<{ name: string; phone: string; address: string; city: string; zip: string }>((data) => {
+            patchState(store, { checkoutForm: data })
+        }),
+        clearCheckoutForm: () => {
+            patchState(store, { checkoutForm: null })
+        }
 
     }))
 )

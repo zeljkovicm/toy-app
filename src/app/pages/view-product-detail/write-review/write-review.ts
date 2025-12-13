@@ -42,9 +42,7 @@ import { ToyStore } from '../../../store';
     </div>
   `,
   styles: `
-    host: {
-      class: 'block',
-    }
+    
   `,
 })
 export class WriteReview {
