@@ -9,8 +9,9 @@ import { MatDialog } from "@angular/material/dialog"
 import { SignInDialog } from "./components/sign-in-dialog/sign-in-dialog"
 import { AuthStore } from "./auth-store"
 import { Router, RouterLink } from "@angular/router"
-import { OrderModel } from "./models/order-model"
+import { OrderItemWithProduct, OrderResponseModel, OrderViewModel } from "./models/order-model"
 import { withStorageSync } from '@angular-architects/ngrx-toolkit'
+import { OrderService } from "./services/order.service"
 
 export type ToyState = {
     products: ProductModel[]
@@ -28,7 +29,7 @@ export type ToyState = {
         zip: string
         paymentType?: 'visa' | 'mastercard' | 'cash'
     } | null
-    orderList: OrderModel[]
+    orderList: OrderResponseModel[]
 }
 
 export const ToyStore = signalStore(
@@ -52,7 +53,7 @@ export const ToyStore = signalStore(
             cartItems,
         }),
     }),
-    withComputed(({ category, products, wishListItems, cartItems, selectedProductId, checkoutForm }) => ({
+    withComputed(({ category, products, wishListItems, cartItems, selectedProductId, checkoutForm, orderList }) => ({
         filteredProducts: computed(() => {
             if (category() === 'svi') return products()
             return products().filter((p) => p.type.name.toLowerCase() === category().toLowerCase())
@@ -64,9 +65,32 @@ export const ToyStore = signalStore(
         wishlistCount: computed(() => wishListItems().length),
         cartCount: computed(() => cartItems().reduce((acc, item) => acc + item.quantity, 0)),
         selectedProduct: computed(() => products().find((p) => p.toyId === selectedProductId())),
-        hasCheckoutData: computed(() => !!checkoutForm())
+        hasCheckoutData: computed(() => !!checkoutForm()),
+        enrichedOrders: computed<OrderViewModel[]>(() => {
+            const productsMap = new Map(
+                products().map(p => [p.toyId, p])
+            )
+
+            return orderList().map(order => ({
+                ...order,
+                items: order.items
+                    .map(item => {
+                        const product = productsMap.get(item.toyId)
+
+                        if (!product) return null
+
+                        return {
+                            toyId: item.toyId,
+                            quantity: item.quantity,
+                            price: item.price,
+                            product
+                        }
+                    })
+                    .filter(Boolean) as OrderItemWithProduct[]
+            }))
+        })
     })),
-    withMethods((store, productService = inject(ProductService), toaster = inject(Toaster), dialog = inject(MatDialog), authStore = inject(AuthStore), router = inject(Router)) => ({
+    withMethods((store, productService = inject(ProductService), toaster = inject(Toaster), dialog = inject(MatDialog), authStore = inject(AuthStore), router = inject(Router), orderService = inject(OrderService)) => ({
         loadProducts: () => {
             productService.getEnrichedProducts().subscribe({
                 next: (data) => patchState(store, { products: data }),
@@ -148,19 +172,18 @@ export const ToyStore = signalStore(
                 })
                 return
             }
+
             router.navigate(['/checkout'])
         },
-        cartItemsCount: () => { return store.cartItems().length },
-        placeOrder: async () => {
+        placeOrder: () => {
             if (!authStore.isAuthenticated()) {
-                toaster.error("Morate biti prijavljeni da biste izvršili narudžbu.")
-                dialog.open(SignInDialog, {
-                    disableClose: true
-                })
+                toaster.error('Morate biti prijavljeni.')
+                dialog.open(SignInDialog, { disableClose: true })
                 return
             }
 
             const checkout = store.checkoutForm()
+
             if (!checkout) {
                 toaster.error('Popunite podatke za narudžbinu.')
                 return
@@ -171,28 +194,42 @@ export const ToyStore = signalStore(
                 return
             }
 
+            if (store.cartItems().length === 0) {
+                toaster.error('Korpa je prazna.')
+                return
+            }
+
             patchState(store, { loading: true })
-            const order: OrderModel = {
-                id: crypto.randomUUID(),
-                userId: authStore.user()?.id!,
-                userEmail: authStore.user()?.email!,
-                name: checkout.name,
+
+            const orderRequest = {
                 phone: checkout.phone,
                 address: checkout.address,
                 city: checkout.city,
                 zip: checkout.zip,
-                total: store.cartItems().reduce((acc, item) => acc + item.quantity * item.product.price, 0),
-                items: store.cartItems(),
-                paymentType: checkout.paymentType!,
-                paymentStatus: checkout.paymentType === 'cash' ? 'pending' : 'success',
-                createdAt: new Date().toISOString()
+                paymentType: checkout.paymentType,
+                items: store.cartItems().map(item => ({
+                    toyId: item.product.toyId,
+                    quantity: item.quantity,
+                    price: item.product.price,
+                }))
             }
-            const updatedOrders = [...store.orderList(), order]
-            await new Promise((resolve) => setTimeout(resolve, 2000))
 
-            patchState(store, { loading: false, cartItems: [], checkoutForm: null, orderList: updatedOrders })
-            router.navigate(['/order-success'])
+            orderService.createOrder(orderRequest).subscribe({
+                next: (order) => {
+                    patchState(store, {
+                        loading: false,
+                        cartItems: [],
+                        checkoutForm: null,
+                        orderList: [...store.orderList(), order],
+                    })
 
+                    router.navigate(['/order-success'])
+                },
+                error: (err) => {
+                    patchState(store, { loading: false })
+                    toaster.error(err?.error?.detail ?? 'Greška pri kreiranju narudžbine')
+                }
+            })
         },
         showWriteReview: () => { patchState(store, { writeReview: true }) },
         hideWriteReview: () => { patchState(store, { writeReview: false }) },
@@ -213,7 +250,42 @@ export const ToyStore = signalStore(
                     paymentType,
                 }
             })
-        })
+        }),
+        loadMyOrders: () => {
+            orderService.getMyOrders().subscribe({
+                next: (orders) => {
+                    patchState(store, { orderList: orders })
+                },
+                error: () => {
+                    toaster.error('Greška pri učitavanju narudžbina')
+                }
+            })
+        },
+        cancelOrder: (orderId: string) => {
+            patchState(store, { loading: true })
+            orderService.cancelOrder(orderId).subscribe({
+                next: () => {
+                    patchState(store, {
+                        loading: false,
+                        orderList: store.orderList().map(order =>
+                            order.id === orderId
+                                ? {
+                                    ...order,
+                                    orderStatus: 'canceled',
+                                    deliveryStatus: 'canceled',
+                                    paymentStatus: 'canceled'
+                                }
+                                : order
+                        )
+                    })
+                    toaster.success('Narudžbina je otkazana')
+                },
+                error: (err) => {
+                    patchState(store, { loading: false })
+                    toaster.error(err?.error?.detail ?? 'Greška pri otkazivanju')
+                }
+            })
+        }
 
     }))
 )

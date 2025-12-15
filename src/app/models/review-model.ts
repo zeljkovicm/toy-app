@@ -8,3 +8,10 @@ export interface ReviewModel {
     comment: string
     createdAt: string
 }
+
+export interface ReviewRequest {
+    toyId: number
+    title: string
+    rating: number
+    comment: string
+}

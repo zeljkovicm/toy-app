@@ -1,8 +1,8 @@
 import { Component, effect, inject } from '@angular/core';
 import { MatIcon } from "@angular/material/icon";
-import { MatFormField } from "@angular/material/form-field";
+import { MatFormField, MatFormFieldModule } from "@angular/material/form-field";
 import { ViewPanel } from '../../../directives/view-panel';
-import { MatInput } from '@angular/material/input';
+import { MatInput, MatInputModule } from '@angular/material/input';
 import { MatTelInput } from 'mat-tel-input';
 import { NonNullableFormBuilder, ɵInternalFormsSharedModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthStore } from '../../../auth-store';
@@ -10,7 +10,7 @@ import { ToyStore } from '../../../store';
 
 @Component({
     selector: 'app-shipping-form',
-    imports: [MatIcon, MatFormField, ViewPanel, MatInput, MatTelInput, ɵInternalFormsSharedModule, ReactiveFormsModule],
+    imports: [MatFormFieldModule, MatInputModule, MatIcon, MatFormField, ViewPanel, MatInput, MatTelInput, ɵInternalFormsSharedModule, ReactiveFormsModule],
     template: `
     <div appViewPanel>
     <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">

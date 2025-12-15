@@ -2,16 +2,17 @@ import { APP_INITIALIZER, ApplicationConfig, inject, provideBrowserGlobalErrorLi
 import { provideRouter, withComponentInputBinding, withViewTransitions } from '@angular/router';
 
 import { routes } from './app.routes';
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideHotToastConfig } from '@ngxpert/hot-toast'
 import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
 import { AuthStore } from './auth-store';
+import { authInterceptor } from './interceptors/auth.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes, withComponentInputBinding(), withViewTransitions()),
-    provideHttpClient(),
+    provideHttpClient(withInterceptors([authInterceptor])),
     provideHotToastConfig({ style: { marginTop: '70px' }, stacking: 'depth', duration: 1000 }),
     {
       provide: MAT_FORM_FIELD_DEFAULT_OPTIONS,

@@ -7,9 +7,9 @@ import { ToyStore } from '../../store';
 import { MatButton } from '@angular/material/button';
 
 @Component({
-  selector: 'app-checkout',
-  imports: [SummarizeOrder, BackButton, PaymentForm, ShippingForm, MatButton],
-  template: `
+    selector: 'app-checkout',
+    imports: [SummarizeOrder, BackButton, PaymentForm, ShippingForm, MatButton],
+    template: `
     <div class="mx-auto max-w-[1200px] py-6">
     <app-back-button class="mb-4" navigateTo="/cart" label="Nazad u korpu" />
     <h1 class="text-3xl font-extrabold mb-4">Narudžba</h1>
@@ -30,7 +30,7 @@ import { MatButton } from '@angular/material/button';
                 </ng-container>
                 <ng-container actionButtons>
                     <button matButton="filled" class="w-full mt-6 py-3"
-                        [disabled]="store.loading() || store.cartItemsCount() === 0" (click)="store.placeOrder()">
+                        [disabled]="store.loading() || store.cartCount() === 0" (click)="store.placeOrder()">
                         {{ store.loading() ? 'Naručujem...' : 'Naruči' }}
                     </button>
                 </ng-container>
@@ -40,8 +40,8 @@ import { MatButton } from '@angular/material/button';
     </div>
 </div>
   `,
-  styles: ``,
+    styles: ``,
 })
 export default class Checkout {
-  store = inject(ToyStore)
+    store = inject(ToyStore)
 }

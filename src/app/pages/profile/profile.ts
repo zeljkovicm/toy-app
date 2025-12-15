@@ -12,10 +12,13 @@ import { ViewPanel } from "../../directives/view-panel";
 import { MatAccordion, MatExpansionPanel, MatExpansionPanelHeader } from '@angular/material/expansion';
 import { MatIcon } from "@angular/material/icon";
 import { MatButton } from '@angular/material/button';
+import { MatDialog } from '@angular/material/dialog';
+import { WriteReviewDialog } from '../../components/write-review-dialog/write-review-dialog';
 
 
 @Component({
   selector: 'app-profile',
+  standalone: true,
   imports: [CommonModule, RouterLink, MatButton, BackButton, MatCard, MatCardHeader, MatCardTitle, MatCardSubtitle, DatePipe, TitleCasePipe, MatAccordion, MatExpansionPanel, MatExpansionPanelHeader, MatIcon],
   template: `
     <div class="mx-auto max-w-[1200px] py-6">
@@ -52,7 +55,7 @@ import { MatButton } from '@angular/material/button';
       }
 
       <mat-accordion class="space-y-4" multi="false">
-        @for (order of store.orderList(); track order.id) {
+        @for (order of store.enrichedOrders(); track order.id) {
           <mat-expansion-panel>
             <mat-expansion-panel-header>
               <div class="grid grid-cols-[2fr_1fr_1fr_1fr] gap-6 items-center w-full pr-4">
@@ -76,14 +79,16 @@ import { MatButton } from '@angular/material/button';
                     {{ order.paymentType | titlecase }}
                   </span>
                 </div>
-                <div
-                  class="inline-flex justify-center px-2 py-1 rounded-full text-xs font-semibold"
+                <div class="inline-flex justify-start">
+                Plaćanje: 
+                  <span class=" px-2 py-1 rounded-full text-xs font-semibold"
                   [ngClass]="{
                     'bg-green-100 text-green-700': order.paymentStatus === 'success',
                     'bg-yellow-100 text-yellow-700': order.paymentStatus === 'pending',
                     'bg-red-100 text-red-700': order.paymentStatus === 'canceled'
                   }">
                   {{ order.paymentStatus | titlecase }}
+                  </span>
                 </div>
                 <div class="text-right font-bold text-lg">
                   RSD {{ order.total }}
@@ -123,14 +128,22 @@ import { MatButton } from '@angular/material/button';
                     <div class="text-gray-500">Telefon: <span class="font-medium">{{ order.phone }}</span></div>
                     <div class="text-gray-500">Adresa: <span class="font-medium">{{ order.address }}</span></div>
                     <div class="text-gray-500">Grad: <span class="font-medium">{{ order.city }}</span></div>
+                    <div class="text-gray-500">Zip: <span class="font-medium">{{ order.zip }}</span></div>
                   </div>
                 </div>
-                <!-- ================= PRAZNO (REZERVA) ================= -->
-                <div></div>
+                <div> <span class="inline-flex justify-center px-2 py-1 rounded-full text-xs font-semibold w-1/2"
+                  [ngClass]="{
+                    'bg-green-100 text-green-700': order.deliveryStatus === 'success',
+                    'bg-yellow-100 text-yellow-700': order.deliveryStatus === 'pending',
+                    'bg-red-100 text-red-700': order.deliveryStatus === 'canceled'
+                  }">
+                  {{ deliveryLabel(order.deliveryStatus) }}
+                </span>
+                </div>
                 <div class="flex flex-col gap-3 items-end">
-                  <button matButton="filled" class="w-1/2" [disabled]="order.paymentStatus !== 'success'"> Oceni
+                  <button matButton="filled" class="w-1/2" [disabled]="order.paymentStatus !== 'success' || order.deliveryStatus !== 'success'" (click)="openReview()"> Oceni
                   </button>
-                  <button matButton="outlined" class="danger w-1/2" [disabled]="order.paymentStatus === 'success'">
+                  <button matButton="outlined" class="danger w-1/2" [disabled]="(order.paymentStatus === 'success' && order.deliveryStatus === 'success') || (order.paymentStatus === 'canceled' || order.deliveryStatus === 'canceled')" (click)="store.cancelOrder(order.id)">
                     Otkaži
                   </button>
                 </div>
@@ -152,5 +165,29 @@ export default class Profile {
   auth = inject(AuthStore)
   navigator = inject(NavigatorService)
   store = inject(ToyStore)
-  router = inject(Router)
+  dialog = inject(MatDialog)
+
+  constructor() {
+    this.store.loadMyOrders()
+  }
+
+  deliveryLabel(status: string) {
+    switch (status) {
+      case 'success':
+        return 'Dostavljeno'
+      case 'pending':
+        return 'U dostavi'
+      case 'canceled':
+        return 'Otkazano'
+      default:
+        return status
+    }
+  }
+
+  openReview() {
+    this.store.showWriteReview();
+    this.dialog.open(WriteReviewDialog, {
+      disableClose: true,
+    });
+  }
 }

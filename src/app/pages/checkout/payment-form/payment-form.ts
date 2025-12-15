@@ -43,12 +43,4 @@ export class PaymentForm {
     onPaymentChange(value: 'visa' | 'mastercard' | 'cash') {
         this.store.setPaymentType(value)
     }
-
-    constructor() {
-        const current = this.store.checkoutForm()
-
-        if (!current?.paymentType) {
-            this.store.setPaymentType('visa')
-        }
-    }
 }
