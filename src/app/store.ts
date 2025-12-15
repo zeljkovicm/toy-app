@@ -165,6 +165,12 @@ export const ToyStore = signalStore(
                 toaster.error('Popunite podatke za narudžbinu.')
                 return
             }
+
+            if (!checkout.paymentType) {
+                toaster.error('Izaberite način plaćanja.')
+                return
+            }
+
             patchState(store, { loading: true })
             const order: OrderModel = {
                 id: crypto.randomUUID(),

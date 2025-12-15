@@ -12,18 +12,19 @@ import { ToyStore } from '../../../store';
     <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
         <mat-icon>payment</mat-icon>
         Opcije za plaćanje
+        <span class="text-red-500 text-sm">*</span>
     </h2>
     <div>
-        <mat-radio-group [value]="" [value]="selectedPayment()" (change)="onPaymentChange($event.value)">
-            <mat-radio-button value="visa">
+        <mat-radio-group [value]="null">
+            <mat-radio-button value="visa" (change)="onPaymentChange('visa')">
                 <img src="visa.png" alt="Visa" class="h-6">
             </mat-radio-button>
 
-            <mat-radio-button value="mastercard">
+            <mat-radio-button value="mastercard" (change)="onPaymentChange('mastercard')">
                 <img src="mastercard.svg" alt="Mastercard" class="h-6">
             </mat-radio-button>
 
-            <mat-radio-button value="cash">
+            <mat-radio-button value="cash" (change)="onPaymentChange('cash')">
                 <img src="cash.svg" alt="Plaćanje pouzećem" class="h-6">
             </mat-radio-button>
         </mat-radio-group>
@@ -41,5 +42,13 @@ export class PaymentForm {
 
     onPaymentChange(value: 'visa' | 'mastercard' | 'cash') {
         this.store.setPaymentType(value)
+    }
+
+    constructor() {
+        const current = this.store.checkoutForm()
+
+        if (!current?.paymentType) {
+            this.store.setPaymentType('visa')
+        }
     }
 }
