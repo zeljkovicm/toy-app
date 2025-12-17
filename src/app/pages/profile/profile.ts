@@ -168,6 +168,7 @@ export default class Profile {
   dialog = inject(MatDialog)
 
   constructor() {
+    this.store.loadProducts()
     this.store.loadMyOrders()
   }
 

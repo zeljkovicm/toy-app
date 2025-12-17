@@ -92,9 +92,19 @@ export const ToyStore = signalStore(
     })),
     withMethods((store, productService = inject(ProductService), toaster = inject(Toaster), dialog = inject(MatDialog), authStore = inject(AuthStore), router = inject(Router), orderService = inject(OrderService)) => ({
         loadProducts: () => {
+            patchState(store, { loading: true })
+
             productService.getEnrichedProducts().subscribe({
-                next: (data) => patchState(store, { products: data }),
-                error: (err) => console.error('API ERROR: ', err)
+                next: (data) =>
+                    patchState(store, {
+                        products: data,
+                        loading: false
+                    }),
+                error: (err) => {
+                    patchState(store, { loading: false })
+                    toaster.error('Greška pri učitavanju proizvoda')
+                    console.error(err)
+                }
             })
         },
         setCategory: signalMethod<string>((category: string) => {

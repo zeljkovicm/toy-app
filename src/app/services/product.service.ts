@@ -9,14 +9,15 @@ import { ProductModel } from "../models/product-model";
 export class ProductService {
     private http = inject(HttpClient)
 
-    private apiUrl = 'http://localhost:8000/enriched'
+    private apiUrl = 'http://localhost:8000'
+    private productsUrl = `${this.apiUrl}/products`
 
     getEnrichedProducts(): Observable<ProductModel[]> {
-        return this.http.get<ProductModel[]>(this.apiUrl).pipe(
+        return this.http.get<ProductModel[]>(this.productsUrl).pipe(
             map(products =>
                 products.map(p => ({
                     ...p,
-                    imageUrl: `https://toy.pequla.com${p.imageUrl}`,
+                    imageUrl: `${this.apiUrl}${p.imageUrl}`,
                     inStock: p.quantity > 0
                 }))
             )
