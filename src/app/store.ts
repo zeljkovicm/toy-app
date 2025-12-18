@@ -12,6 +12,8 @@ import { Router, RouterLink } from "@angular/router"
 import { OrderItemWithProduct, OrderResponseModel, OrderViewModel } from "./models/order-model"
 import { withStorageSync } from '@angular-architects/ngrx-toolkit'
 import { OrderService } from "./services/order.service"
+import { ReviewService } from "./services/review.service"
+import { ReviewSummaryModel } from "./models/review-model"
 
 export type ToyState = {
     products: ProductModel[]
@@ -29,7 +31,8 @@ export type ToyState = {
         zip: string
         paymentType?: 'visa' | 'mastercard' | 'cash'
     } | null
-    orderList: OrderResponseModel[]
+    orderList: OrderResponseModel[],
+    reviewSummary: Record<number, ReviewSummaryModel>
 }
 
 export const ToyStore = signalStore(
@@ -43,7 +46,8 @@ export const ToyStore = signalStore(
         selectedProductId: null,
         writeReview: false,
         checkoutForm: null,
-        orderList: []
+        orderList: [],
+        reviewSummary: {}
 
     }),
     withStorageSync({
@@ -53,7 +57,7 @@ export const ToyStore = signalStore(
             cartItems,
         }),
     }),
-    withComputed(({ category, products, wishListItems, cartItems, selectedProductId, checkoutForm, orderList }) => ({
+    withComputed(({ category, products, wishListItems, cartItems, selectedProductId, checkoutForm, orderList, reviewSummary }) => ({
         filteredProducts: computed(() => {
             if (category() === 'svi') return products()
             return products().filter((p) => p.type.name.toLowerCase() === category().toLowerCase())
@@ -88,9 +92,14 @@ export const ToyStore = signalStore(
                     })
                     .filter(Boolean) as OrderItemWithProduct[]
             }))
+        }),
+        reviewSummaryForSelectedProduct: computed(() => {
+            const id = selectedProductId()
+            if (!id) return null
+            return reviewSummary()[id] ?? null
         })
     })),
-    withMethods((store, productService = inject(ProductService), toaster = inject(Toaster), dialog = inject(MatDialog), authStore = inject(AuthStore), router = inject(Router), orderService = inject(OrderService)) => ({
+    withMethods((store, productService = inject(ProductService), toaster = inject(Toaster), dialog = inject(MatDialog), authStore = inject(AuthStore), router = inject(Router), orderService = inject(OrderService), reviewService = inject(ReviewService)) => ({
         loadProducts: () => {
             patchState(store, { loading: true })
 
@@ -293,6 +302,21 @@ export const ToyStore = signalStore(
                 error: (err) => {
                     patchState(store, { loading: false })
                     toaster.error(err?.error?.detail ?? 'Greška pri otkazivanju')
+                }
+            })
+        },
+        loadReviewSummary: (toyId: number) => {
+            reviewService.getReviewSummary(toyId).subscribe({
+                next: (summary) => {
+                    patchState(store, {
+                        reviewSummary: {
+                            ...store.reviewSummary(),
+                            [toyId]: summary
+                        }
+                    })
+                },
+                error: () => {
+                    console.error('Greška pri učitavanju summary-a')
                 }
             })
         }

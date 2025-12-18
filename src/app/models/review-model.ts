@@ -9,6 +9,18 @@ export interface ReviewModel {
     createdAt: string
 }
 
+export interface RatingBreakdown {
+    stars: number
+    count: number
+}
+
+export interface ReviewSummaryModel {
+    toyId: number
+    averageRating: number
+    reviewCount: number
+    breakdown: RatingBreakdown[]
+}
+
 export interface ReviewRequest {
     toyId: number
     title: string
