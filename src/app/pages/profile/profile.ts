@@ -1,29 +1,44 @@
-import { Component, inject } from '@angular/core';
-import { AuthStore } from '../../auth-store';
-import { BackButton } from "../../components/back-button/back-button";
-import { NavigatorService } from '../../services/navigate.service';
-import { Router, RouterLink } from '@angular/router';
-import { MatCard, MatCardHeader, MatCardTitle, MatCardSubtitle, MatCardContent } from '@angular/material/card'
-import { CommonModule, CurrencyPipe, DatePipe, TitleCasePipe } from '@angular/common';
-import { MatDivider } from "@angular/material/divider";
-import { MatList, MatListItem } from "@angular/material/list";
-import { ToyStore } from '../../store';
-import { ViewPanel } from "../../directives/view-panel";
-import { MatAccordion, MatExpansionPanel, MatExpansionPanelHeader } from '@angular/material/expansion';
-import { MatIcon } from "@angular/material/icon";
-import { MatButton } from '@angular/material/button';
-import { MatDialog } from '@angular/material/dialog';
-import { WriteReviewDialog } from '../../components/write-review-dialog/write-review-dialog';
+import { Component, inject } from '@angular/core'
+import { CommonModule, DatePipe } from '@angular/common'
 
+import { MatAccordion, MatExpansionPanel, MatExpansionPanelHeader } from '@angular/material/expansion'
+import { MatButton } from '@angular/material/button'
+import { MatCard, MatCardHeader, MatCardTitle, MatCardSubtitle } from '@angular/material/card'
+
+import { AuthStore } from '../../auth-store'
+import { ToyStore } from '../../store'
+import { NavigatorService } from '../../services/navigate.service'
+import { BackButton } from '../../components/back-button/back-button'
+import { WriteReview } from '../../pages/view-product-detail/write-review/write-review'
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, RouterLink, MatButton, BackButton, MatCard, MatCardHeader, MatCardTitle, MatCardSubtitle, DatePipe, TitleCasePipe, MatAccordion, MatExpansionPanel, MatExpansionPanelHeader, MatIcon],
+  imports: [
+    CommonModule,
+    DatePipe,
+
+    MatAccordion,
+    MatExpansionPanel,
+    MatExpansionPanelHeader,
+    MatButton,
+    MatCard,
+    MatCardHeader,
+    MatCardTitle,
+    MatCardSubtitle,
+
+    BackButton,
+    WriteReview,
+  ],
   template: `
     <div class="mx-auto max-w-[1200px] py-6">
-      <app-back-button class="mb-6" [navigateTo]="navigator.get()" label="Nazad" />
+      <app-back-button
+        class="mb-6"
+        [navigateTo]="navigator.get()"
+        label="Nazad"
+      />
 
+      <!-- USER INFO -->
       <mat-card class="mb-10">
         <mat-card-header>
           <mat-card-title>{{ auth.user()?.name }}</mat-card-title>
@@ -33,41 +48,41 @@ import { WriteReviewDialog } from '../../components/write-review-dialog/write-re
 
       <h2 class="text-2xl font-bold mb-4">Moje narudžbine</h2>
 
-      @if (store.orderList().length === 0) {
-        <div class="flex flex-col items-center justify-center py-16 text-center">
-          <div class="w-20 h-20 mb-8 rounded-full bg-gray-100 flex items-center justify-center">
-            <mat-icon class="text-gray-400 transform scale-150">card_giftcard</mat-icon>
-          </div>
-          <h2 class="text-2xl font-bold text-gray-900 mb-3">
-            Trenutno nemaš ni jednu narudžbinu
-          </h2>
-          <p class="text-gray-600 mb-8">
-            Pretraži prodavnicu, siguran sam da ćeš naći baš to što ti treba!
-          </p>
-      
-          <button
-            matButton="filled"
-            routerLink="/products/svi"
-            class="min-w-[200px] py-3">
-            Pregledaj prodavnicu
-          </button>
-        </div>
-      }
-
       <mat-accordion class="space-y-4" multi="false">
         @for (order of store.enrichedOrders(); track order.id) {
           <mat-expansion-panel>
+
+            <!-- HEADER -->
             <mat-expansion-panel-header>
-              <div class="grid grid-cols-[2fr_1fr_1fr_1fr] gap-6 items-center w-full pr-4">
-                <div>
-                  <div class="font-semibold text-lg">
-                    {{ order.createdAt | date:'MMM d, yyyy – HH:mm' }}
+              <div class="flex items-center gap-6 w-full pr-4 text-sm">
+
+                <!-- DATETIME + ID (FIXNA ŠIRINA) -->
+                <div class="w-[180px] flex flex-col shrink-0">
+                  <div class="font-semibold">
+                    {{ order.createdAt | date:'dd.MM.yyyy HH:mm' }}
                   </div>
-                  <div class="text-sm text-gray-500">
-                    ID: #{{ order.id }}
+                  <div class="text-xs text-gray-500">
+                    #{{ order.id }}
                   </div>
                 </div>
-                <div class="flex items-center gap-2 justify-start">
+
+                <!-- TELEFON -->
+                <div class="flex items-center gap-1 whitespace-nowrap">
+                  📞 <span class="font-medium">{{ order.phone }}</span>
+                </div>
+
+                <!-- ADRESA -->
+                <div class="flex flex-col whitespace-nowrap leading-tight">
+                  <span class="font-medium">
+                    📍 {{ order.city }}
+                  </span>
+                  <span class="text-xs text-gray-500">
+                    {{ order.address }}
+                  </span>
+                </div>
+
+                <!-- NAČIN PLAĆANJA -->
+                <div class="flex items-center gap-2 whitespace-nowrap">
                   @if (order.paymentType === 'visa') {
                     <img src="visa.png" class="h-4" />
                   } @else if (order.paymentType === 'mastercard') {
@@ -75,97 +90,121 @@ import { WriteReviewDialog } from '../../components/write-review-dialog/write-re
                   } @else {
                     <img src="cash.svg" class="h-4" />
                   }
-                  <span class="text-sm font-medium">
-                    {{ order.paymentType | titlecase }}
+                  <span class="capitalize font-medium">
+                    {{ order.paymentType }}
                   </span>
                 </div>
-                <div class="inline-flex justify-start">
-                Plaćanje: 
-                  <span class=" px-2 py-1 rounded-full text-xs font-semibold"
+
+                <!-- STATUS PLAĆANJA -->
+                <span
+                  class="px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap"
                   [ngClass]="{
                     'bg-green-100 text-green-700': order.paymentStatus === 'success',
                     'bg-yellow-100 text-yellow-700': order.paymentStatus === 'pending',
                     'bg-red-100 text-red-700': order.paymentStatus === 'canceled'
-                  }">
-                  {{ order.paymentStatus | titlecase }}
-                  </span>
-                </div>
-                <div class="text-right font-bold text-lg">
-                  RSD {{ order.total }}
-                </div>
-              </div>
-            </mat-expansion-panel-header>
-                
-            <div class="pt-6">
+                  }"
+                >
+                  {{ order.paymentStatus === 'success'
+                    ? 'Plaćeno'
+                    : order.paymentStatus === 'pending'
+                      ? 'Na čekanju'
+                      : 'Otkazano' }}
+                </span>
 
-              <div class="grid grid-cols-[2fr_1fr_1fr_1fr] gap-6 items-start w-full">
-                <div>
-                  @for (item of order.items; track item.product.toyId) {
-                    <div class="flex items-center gap-4">
-                      <img
-                        [src]="item.product.imageUrl"
-                        class="w-20 h-20 rounded-lg object-cover"
-                      />
-                      <div>
-                        <div class="font-semibold text-gray-900">
-                          {{ item.product.name }}
-                        </div>
-                        <div class="text-sm text-gray-600">
-                           Količina: x {{ item.quantity }}
-                        </div>
-                        <div class="text-sm text-gray-600">
-                           Jedinična cena: RSD {{ item.product.price }}
-                        </div>
-                        <div class="text-sm font-medium">
-                          Ukupno: RSD {{ item.quantity * item.product.price }}
-                        </div>
-                      </div>
-                    </div>
-                  }
-                </div>
-                <div class="text-sm space-y-2">
-                  <div>
-                    <div class="text-gray-500">Telefon: <span class="font-medium">{{ order.phone }}</span></div>
-                    <div class="text-gray-500">Adresa: <span class="font-medium">{{ order.address }}</span></div>
-                    <div class="text-gray-500">Grad: <span class="font-medium">{{ order.city }}</span></div>
-                    <div class="text-gray-500">Zip: <span class="font-medium">{{ order.zip }}</span></div>
-                  </div>
-                </div>
-                <div> <span class="inline-flex justify-center px-2 py-1 rounded-full text-xs font-semibold w-1/2"
+                <!-- STATUS DOSTAVE -->
+                <span
+                  class="px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap"
                   [ngClass]="{
                     'bg-green-100 text-green-700': order.deliveryStatus === 'success',
                     'bg-yellow-100 text-yellow-700': order.deliveryStatus === 'pending',
                     'bg-red-100 text-red-700': order.deliveryStatus === 'canceled'
-                  }">
+                  }"
+                >
                   {{ deliveryLabel(order.deliveryStatus) }}
                 </span>
+
+                <!-- PUSH DESNO -->
+                <div class="flex-1"></div>
+
+                <!-- TOTAL -->
+                <div class="text-right whitespace-nowrap w-[120px]">
+                  <div class="text-xs text-gray-500">Ukupno</div>
+                  <div class="font-bold">
+                    RSD {{ order.total }}
+                  </div>
                 </div>
-                <div class="flex flex-col gap-3 items-end">
-                  <button matButton="filled" class="w-1/2" [disabled]="order.paymentStatus !== 'success' || order.deliveryStatus !== 'success'" (click)="openReview()"> Oceni
-                  </button>
-                  <button matButton="outlined" class="danger w-1/2" [disabled]="(order.paymentStatus === 'success' && order.deliveryStatus === 'success') || (order.paymentStatus === 'canceled' || order.deliveryStatus === 'canceled')" (click)="store.cancelOrder(order.id)">
-                    Otkaži
-                  </button>
-                </div>
+
+                <!-- OTKAZI -->
+                <button
+                  matButton="outlined"
+                  class="danger whitespace-nowrap"
+                  [disabled]="
+                    (order.paymentStatus === 'success' && order.deliveryStatus === 'success') ||
+                    order.paymentStatus === 'canceled' ||
+                    order.deliveryStatus === 'canceled'
+                  "
+                  (click)="store.cancelOrder(order.id); $event.stopPropagation()"
+                >
+                  Otkaži
+                </button>
+
               </div>
+            </mat-expansion-panel-header>
+
+            <!-- CONTENT -->
+            <div class="pt-6 space-y-6">
+              @for (item of order.items; track item.product.toyId) {
+                <div class="border rounded-lg p-4">
+
+                  <div class="flex items-center gap-4 w-full">
+
+                    <img
+                      [src]="item.product.imageUrl"
+                      class="w-20 h-20 rounded-lg object-cover"
+                    />
+
+                    <div class="flex-1">
+                      <div class="font-semibold text-gray-900">
+                        {{ item.product.name }}
+                      </div>
+                      <div class="text-sm text-gray-600">
+                        Količina: x {{ item.quantity }}
+                      </div>
+                      <div class="text-sm text-gray-600">
+                        Cena: RSD {{ item.product.price }}
+                      </div>
+                    </div>
+
+                    <button
+                      matButton="outlined"
+                      [disabled]="order.paymentStatus !== 'success' || order.deliveryStatus !== 'success'"
+                      (click)="store.startReview(item.product.toyId); $event.stopPropagation()"
+                    >
+                      Oceni
+                    </button>
+                  </div>
+
+                  <!-- INLINE REVIEW -->
+                  @if (store.reviewingProductId() === item.product.toyId) {
+                    <div class="mt-4" (click)="$event.stopPropagation()">
+                      <app-write-review [toyId]="item.product.toyId" />
+                    </div>
+                  }
+
+                </div>
+              }
             </div>
 
-              
           </mat-expansion-panel>
-              
         }
-      
       </mat-accordion>
-
     </div>
   `,
-  styles: ``,
 })
 export default class Profile {
   auth = inject(AuthStore)
-  navigator = inject(NavigatorService)
   store = inject(ToyStore)
-  dialog = inject(MatDialog)
+  navigator = inject(NavigatorService)
 
   constructor() {
     this.store.loadProducts()
@@ -174,21 +213,10 @@ export default class Profile {
 
   deliveryLabel(status: string) {
     switch (status) {
-      case 'success':
-        return 'Dostavljeno'
-      case 'pending':
-        return 'U dostavi'
-      case 'canceled':
-        return 'Otkazano'
-      default:
-        return status
+      case 'success': return 'Dostavljeno'
+      case 'pending': return 'U dostavi'
+      case 'canceled': return 'Otkazano'
+      default: return status
     }
-  }
-
-  openReview() {
-    this.store.showWriteReview();
-    this.dialog.open(WriteReviewDialog, {
-      disableClose: true,
-    });
   }
 }

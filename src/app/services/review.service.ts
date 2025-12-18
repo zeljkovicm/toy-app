@@ -18,7 +18,7 @@ export class ReviewService {
         )
     }
 
-    postReview(data: ReviewRequest): Observable<ReviewModel> {
-        return this.http.post<ReviewModel>(`${this.apiUrl}/create`, data)
+    createReview(payload: ReviewRequest) {
+        return this.http.post<ReviewModel>(this.apiUrl, payload)
     }
 }

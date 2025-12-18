@@ -1,69 +1,118 @@
-import { Component, inject, signal } from '@angular/core';
-import { ViewPanel } from "../../../directives/view-panel";
-import { MatFormField, MatLabel } from "@angular/material/form-field";
-import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatInput } from '@angular/material/input';
-import { OptionItemModel } from '../../../models/option-item-model';
+import { Component, inject, input, signal } from '@angular/core'
+import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms'
+
+import { MatFormField, MatLabel } from '@angular/material/form-field'
+import { MatInput } from '@angular/material/input'
 import { MatSelect, MatOption } from '@angular/material/select'
-import { MatAnchor } from "@angular/material/button";
-import { ToyStore } from '../../../store';
+import { MatButton } from '@angular/material/button'
+
+import { ViewPanel } from '../../../directives/view-panel'
+import { OptionItemModel } from '../../../models/option-item-model'
+import { ToyStore } from '../../../store'
 
 @Component({
   selector: 'app-write-review',
-  imports: [ViewPanel, MatFormField, ReactiveFormsModule, MatLabel, MatInput, MatSelect, MatOption, MatAnchor],
+  standalone: true,
+  imports: [
+    ViewPanel,
+    ReactiveFormsModule,
+
+    MatFormField,
+    MatLabel,
+    MatInput,
+    MatSelect,
+    MatOption,
+    MatButton,
+  ],
   template: `
-    <div appViewPanel>
+    <!-- 👇 OBAVEZNO: stopPropagation NA ROOT -->
+    <div appViewPanel (click)="$event.stopPropagation()">
+
       <h2 class="text-xl font-semibold mb-6">Napiši recenziju</h2>
+
       <form [formGroup]="reviewForm" (ngSubmit)="saveReview()">
+
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+
           <mat-form-field>
             <mat-label>Naslov</mat-label>
-            <input type="text" formControlName="title" placeholder="Kratak opis tvoje recenzije" matInput>
+            <input matInput formControlName="title" />
           </mat-form-field>
+
           <mat-form-field>
-            <mat-select>
-              @for(option of ratingOptions(); track option.value){
-                <mat-option [value]="option.value">{{option.label}}</mat-option>
+            <mat-label>Ocena</mat-label>
+            <mat-select
+              formControlName="rating"
+              (click)="$event.stopPropagation()"
+            >
+              @for (o of ratingOptions(); track o.value) {
+                <mat-option [value]="o.value">{{ o.label }}</mat-option>
               }
             </mat-select>
           </mat-form-field>
+
           <mat-form-field class="col-span-2">
             <mat-label>Recenzija</mat-label>
-            <textarea placeholder="Kaži drugima o svom iskustvu sa nama i ovim proizvodom" formControlName="comment" matInput type="text" rows="4"></textarea>
+            <textarea matInput rows="4" formControlName="comment"></textarea>
           </mat-form-field>
+
         </div>
+
         <div class="flex gap-4">
-          <button matButton="filled" type="submit" [disabled]="store.loading()">
-              {{store.loading() ? 'Ocenjujem' : 'Oceni'}}
+
+          <button
+            matButton="filled"
+            type="submit"
+            [disabled]="store.loading()"
+          >
+            Oceni
           </button>
-          <button matButton="outlined" type="button" (click)="store.hideWriteReview()">Odustani</button>
+
+          <!-- 👇 OBAVEZNO: stopPropagation + stopReview -->
+          <button
+            matButton="outlined"
+            type="button"
+            (click)="$event.stopPropagation(); store.stopReview()"
+          >
+            Odustani
+          </button>
+
         </div>
       </form>
     </div>
-  `,
-  styles: `
-    
   `,
 })
 export class WriteReview {
   store = inject(ToyStore)
   fb = inject(NonNullableFormBuilder)
 
+  toyId = input.required<number>()
 
   ratingOptions = signal<OptionItemModel[]>([
-    { label: '5 zvezdica - Odlično', value: 5 },
-    { label: '4 zvezdice - Jako dobro', value: 4 },
-    { label: '3 zvezdice - Dobro', value: 3 },
-    { label: '2 zvezdice - Loše', value: 2 },
-    { label: '5 zvezdica - Jako loše', value: 1 },
+    { label: '5 – Odlično', value: 5 },
+    { label: '4 – Jako dobro', value: 4 },
+    { label: '3 – Dobro', value: 3 },
+    { label: '2 – Loše', value: 2 },
+    { label: '1 – Jako loše', value: 1 },
   ])
-
 
   reviewForm = this.fb.group({
     title: ['', Validators.required],
+    rating: [null as number | null, Validators.required],
     comment: ['', Validators.required],
-    rating: [, Validators.required]
   })
 
-  saveReview() { }
+  saveReview() {
+    if (this.reviewForm.invalid) return
+
+    this.store.createReview({
+      toyId: this.toyId(),
+      title: this.reviewForm.value.title!,
+      rating: this.reviewForm.value.rating!,
+      comment: this.reviewForm.value.comment!,
+    })
+
+    // 👇 KLJUČNO
+    this.store.stopReview()
+  }
 }

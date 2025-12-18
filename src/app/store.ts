@@ -33,6 +33,7 @@ export type ToyState = {
     } | null
     orderList: OrderResponseModel[],
     reviewSummary: Record<number, ReviewSummaryModel>
+    reviewingProductId: number | null,
 }
 
 export const ToyStore = signalStore(
@@ -47,7 +48,8 @@ export const ToyStore = signalStore(
         writeReview: false,
         checkoutForm: null,
         orderList: [],
-        reviewSummary: {}
+        reviewSummary: {},
+        reviewingProductId: null,
 
     }),
     withStorageSync({
@@ -319,7 +321,44 @@ export const ToyStore = signalStore(
                     console.error('Greška pri učitavanju summary-a')
                 }
             })
-        }
+        },
+        createReview: (payload: {
+            toyId: number
+            title: string
+            rating: number
+            comment: string
+        }) => {
+            patchState(store, { loading: true })
+
+            reviewService.createReview(payload).subscribe({
+                next: () => {
+                    patchState(store, { loading: false, writeReview: false })
+
+                    // refresh summary za taj proizvod
+                    reviewService.getReviewSummary(payload.toyId).subscribe({
+                        next: (summary) => {
+                            patchState(store, {
+                                reviewSummary: {
+                                    ...store.reviewSummary(),
+                                    [payload.toyId]: summary
+                                }
+                            })
+                        }
+                    })
+                },
+                error: (err) => {
+                    patchState(store, { loading: false })
+                    toaster.error(err?.error?.detail ?? 'Greška pri slanju recenzije')
+                }
+            })
+        },
+        startReview: (toyId: number) => {
+            patchState(store, { reviewingProductId: toyId })
+        },
+
+        stopReview: () => {
+            patchState(store, { reviewingProductId: null })
+        },
 
     }))
 )
