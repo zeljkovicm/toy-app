@@ -31,9 +31,11 @@ export type ToyState = {
         zip: string
         paymentType?: 'visa' | 'mastercard' | 'cash'
     } | null
-    orderList: OrderResponseModel[],
+    orderList: OrderResponseModel[]
     reviewSummary: Record<number, ReviewSummaryModel>
-    reviewingProductId: number | null,
+    reviewingProductId: number | null
+    sidebarOpen: boolean
+    searchTerm: string
 }
 
 export const ToyStore = signalStore(
@@ -50,6 +52,8 @@ export const ToyStore = signalStore(
         orderList: [],
         reviewSummary: {},
         reviewingProductId: null,
+        sidebarOpen: false,
+        searchTerm: ''
 
     }),
     withStorageSync({
@@ -59,13 +63,32 @@ export const ToyStore = signalStore(
             cartItems,
         }),
     }),
-    withComputed(({ category, products, wishListItems, cartItems, selectedProductId, checkoutForm, orderList, reviewSummary }) => ({
+    withComputed(({ category, products, wishListItems, cartItems, selectedProductId, checkoutForm, orderList, reviewSummary, searchTerm }) => ({
         filteredProducts: computed(() => {
-            if (category() === 'svi') return products()
-            return products().filter((p) => p.type.name.toLowerCase() === category().toLowerCase())
+            let result = products()
+            const search = searchTerm()
+            if (category().toLowerCase() !== 'svi') {
+                result = result.filter(
+                    p => p.type.name.toLowerCase() === category().toLowerCase()
+                )
+            }
+            if (search) {
+                result = result.filter(p => {
+                    const searchableText = `
+                  ${p.name}
+                  ${p.description}
+                  ${p.type.name}
+                  ${p.ageGroup?.name ?? ''}
+                  ${p.targetGroup ?? ''}
+                `.toLowerCase()
+
+                    return searchableText.includes(search)
+                })
+            }
+            return result
         }),
         categories: computed(() => {
-            const unique = Array.from(new Set(products().map(p => p.type.name)))
+            const unique = Array.from(new Set(products().map(p => p.type.name.toLowerCase())))
             return ['svi', ...unique]
         }),
         wishlistCount: computed(() => wishListItems().length),
@@ -101,7 +124,7 @@ export const ToyStore = signalStore(
             return reviewSummary()[id] ?? null
         })
     })),
-    withMethods((store, productService = inject(ProductService), toaster = inject(Toaster), dialog = inject(MatDialog), authStore = inject(AuthStore), router = inject(Router), orderService = inject(OrderService), reviewService = inject(ReviewService)) => ({
+    withMethods((store, productService = inject(ProductService), toaster = inject(Toaster), dialog = inject(MatDialog), authStore = inject(AuthStore), router = inject(Router), orderService = inject(OrderService), reviewService = inject(ReviewService),) => ({
         loadProducts: () => {
             patchState(store, { loading: true })
 
@@ -358,6 +381,25 @@ export const ToyStore = signalStore(
 
         stopReview: () => {
             patchState(store, { reviewingProductId: null })
+        },
+
+        toggleSidebar: () => {
+            patchState(store, { sidebarOpen: !store.sidebarOpen() })
+        },
+
+        openSidebar: () => {
+            patchState(store, { sidebarOpen: true })
+        },
+
+        closeSidebar: () => {
+            patchState(store, { sidebarOpen: false })
+        },
+        setSearchTerm: (term: string) => {
+            patchState(store, { searchTerm: term.toLowerCase() })
+        },
+
+        clearSearch: () => {
+            patchState(store, { searchTerm: '' })
         },
 
     }))

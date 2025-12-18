@@ -23,7 +23,7 @@ import { ToggleWishlistButton } from "../../components/toggle-wishlist-button/to
   ],
   template: `
   <mat-sidenav-container>
-    <mat-sidenav mode="side" opened="true">
+    <mat-sidenav class="w-64" mode="side" [opened]="store.sidebarOpen()" >
       <div class="p-6">
         <h2 class="text-lg text-gray-900">Kategorije</h2>
         <mat-nav-list>
@@ -52,7 +52,7 @@ import { ToggleWishlistButton } from "../../components/toggle-wishlist-button/to
 })
 export default class ProductsGrid {
   store = inject(ToyStore)
-  category = input<string>('svi proizvodi') // kategorija iz url
+  category = input<string>('svi') // kategorija iz url
 
   constructor() {
     this.store.loadProducts();
