@@ -1,4 +1,4 @@
-import { Component, effect, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { MatIcon } from "@angular/material/icon";
 import { MatFormField, MatFormFieldModule } from "@angular/material/form-field";
 import { ViewPanel } from '../../../directives/view-panel';

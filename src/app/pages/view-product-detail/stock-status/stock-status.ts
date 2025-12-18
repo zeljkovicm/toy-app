@@ -1,6 +1,5 @@
-import { Component, inject, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { MatIcon } from "@angular/material/icon";
-import { ToyStore } from '../../../store';
 
 @Component({
   selector: 'app-stock-status',

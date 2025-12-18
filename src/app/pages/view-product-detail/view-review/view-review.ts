@@ -28,36 +28,23 @@ import { ReviewService } from '../../../services/review.service'
 
       <div class="flex justify-between items-center mb-4">
         <h2 class="text-xl font-semibold">Recenzije kupaca</h2>
-
         @if (auth.isAuthenticated()) {
-          <!-- 👇 OBAVEZNO: stopPropagation -->
-          <button
-            matButton="filled"
-            (click)="$event.stopPropagation(); store.startReview(product().toyId)"
-          >
+          <button matButton="filled" (click)="$event.stopPropagation(); store.startReview(product().toyId)">
             Dodaj recenziju
           </button>
         }
       </div>
-
-      <!-- INLINE WRITE REVIEW -->
       @if (store.reviewingProductId() === product().toyId) {
-        <app-write-review
-          class="mb-6"
-          [toyId]="product().toyId"
-        />
+        <app-write-review class="mb-6" [toyId]="product().toyId"/>
       }
-
       @if (store.reviewSummaryForSelectedProduct(); as summary) {
         <app-rating-summary [summary]="summary" />
       }
-
       <div class="flex flex-col gap-6">
         @for (review of sortedReviews(); track review.reviewId) {
           <app-view-review-item [review]="review" />
         }
       </div>
-
     </div>
   `,
 })

@@ -33,11 +33,10 @@ export default class ViewProductDetail {
 
   constructor() {
     effect(() => {
-      const products = this.store.products();
-      const id = Number(this.productId());
+      const id = Number(this.productId())
 
 
-      this.store.setProductId(id);
-    }, { allowSignalWrites: true });
+      this.store.setProductId(id)
+    }, { allowSignalWrites: true })
   }
 }

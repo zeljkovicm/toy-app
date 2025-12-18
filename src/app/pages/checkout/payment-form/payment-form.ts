@@ -1,7 +1,7 @@
 import { Component, computed, inject } from '@angular/core';
 import { MatIcon } from "@angular/material/icon";
 import { ViewPanel } from '../../../directives/view-panel';
-import { MatRadioModule, MatRadioGroup, MatRadioButton } from '@angular/material/radio';
+import { MatRadioGroup, MatRadioButton } from '@angular/material/radio';
 import { ToyStore } from '../../../store';
 
 @Component({

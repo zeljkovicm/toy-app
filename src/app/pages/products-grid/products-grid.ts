@@ -1,18 +1,26 @@
-import { Component, computed, effect, inject, Injectable, input, signal } from '@angular/core';
-import { ProductModel } from '../../models/product-model';
-import { ProductService } from '../../services/product.service';
+import { Component, inject, input } from '@angular/core';
 import { ProductCard } from "../../components/product-card/product-card";
 import { MatSidenavContainer, MatSidenavContent, MatSidenav } from '@angular/material/sidenav'
 import { MatNavList, MatListItem, MatListItemTitle } from '@angular/material/list'
 import { RouterLink } from '@angular/router';
 import { TitleCasePipe } from '@angular/common';
 import { ToyStore } from '../../store';
-import { MatIcon } from "@angular/material/icon";
 import { ToggleWishlistButton } from "../../components/toggle-wishlist-button/toggle-wishlist-button";
 
 @Component({
   selector: 'app-products-grid',
-  imports: [ProductCard, MatSidenavContainer, MatSidenavContent, MatSidenav, MatNavList, MatListItem, MatListItemTitle, RouterLink, TitleCasePipe, ToggleWishlistButton],
+  imports: [
+    ProductCard,
+    MatSidenavContainer,
+    MatSidenavContent,
+    MatSidenav,
+    MatNavList,
+    MatListItem,
+    MatListItemTitle,
+    RouterLink,
+    TitleCasePipe,
+    ToggleWishlistButton
+  ],
   template: `
   <mat-sidenav-container>
     <mat-sidenav mode="side" opened="true">
