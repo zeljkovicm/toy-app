@@ -10,6 +10,7 @@ import { ToyStore } from '../../store'
 import { NavigatorService } from '../../services/navigate.service'
 import { BackButton } from '../../components/back-button/back-button'
 import { WriteReview } from '../../pages/view-product-detail/write-review/write-review'
+import { ViewPanel } from "../../directives/view-panel";
 
 @Component({
   selector: 'app-profile',
@@ -17,7 +18,6 @@ import { WriteReview } from '../../pages/view-product-detail/write-review/write-
   imports: [
     CommonModule,
     DatePipe,
-
     MatAccordion,
     MatExpansionPanel,
     MatExpansionPanelHeader,
@@ -26,9 +26,9 @@ import { WriteReview } from '../../pages/view-product-detail/write-review/write-
     MatCardHeader,
     MatCardTitle,
     MatCardSubtitle,
-
     BackButton,
     WriteReview,
+    ViewPanel
   ],
   template: `
     <div class="mx-auto max-w-[1200px] py-6">
@@ -114,7 +114,7 @@ import { WriteReview } from '../../pages/view-product-detail/write-review/write-
             </mat-expansion-panel-header>
             <div class="pt-6 space-y-6">
               @for (item of order.items; track item.product.toyId) {
-                <div class="border rounded-lg p-4">
+                <div class="border rounded-lg p-4" appViewPanel>
                   <div class="flex items-center gap-4 w-full">
                     <img [src]="item.product.imageUrl" class="w-20 h-20 rounded-lg object-cover"/>
                     <div class="flex-1">
