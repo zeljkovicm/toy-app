@@ -16,9 +16,9 @@ import { NgClass } from '@angular/common';
           <img [src]="product().imageUrl" alt="" class="w-full h-[300px] object-cover rounded-t-xl" [style.view-transition-name]="'product-image-' + product().toyId">
           <ng-content></ng-content>
           <div class="p-5 flex flex-col flex-1">
-            <h3 class="text-lg font-semibold text-gray-900 mb-2 leading-tight">
+            <h4 class="text-lg font-semibold text-gray-900 mb-2 leading-tight">
               {{product().name}}
-            </h3>
+            </h4>
             <p class="text-sm text-gray-600 mb-4 flex-1 leading-relaxed">{{product().description}}</p>
             <app-star-rating class="mb-3" [averageRating]="product().averageRating">({{product().reviewCount}})</app-star-rating>
             <div class="text-sm font-medium mb-4" [ngClass]="product().quantity > 0 ? 'text-green-600' : 'text-red-600'">{{product().quantity > 0 ? 'Na stanju' : 'Nije na stanju'}}</div>
