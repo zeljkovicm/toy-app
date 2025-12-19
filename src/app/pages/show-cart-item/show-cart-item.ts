@@ -46,5 +46,7 @@ export class ShowCartItem {
     item = input.required<CartModel>()
     store = inject(ToyStore)
 
-    total = computed(() => (this.item().product.quantity * this.item().product.price).toFixed(2))
+    total = computed(() => {
+        return this.item().quantity * this.item().product.price
+    })
 }
