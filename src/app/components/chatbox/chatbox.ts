@@ -11,7 +11,7 @@ import { FormsModule } from '@angular/forms';
   standalone: true,
   imports: [CommonModule, MatButtonModule, MatIconModule, MatFormFieldModule, MatInputModule, FormsModule],
   template: `
-    <div class="fixed bottom-6 right-6 z-[1000] flex flex-col items-end pointer-events-none font-sans">
+    <div class="flex flex-col items-end pointer-events-none font-sans">
       
       <div 
         class="transition-all duration-500 cubic-bezier(0.175, 0.885, 0.32, 1.275) transform origin-bottom-right mb-6 pointer-events-auto"

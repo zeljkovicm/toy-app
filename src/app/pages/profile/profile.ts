@@ -64,13 +64,11 @@ import { ViewPanel } from "../../directives/view-panel";
                 <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-y-4 gap-x-6 w-full pr-4 items-center">
                   
                   <div class="flex flex-col">
-                    <span class="text-[10px] uppercase font-black text-gray-400 tracking-widest mb-1">Datum</span>
                     <span class="text-sm font-bold text-gray-800">{{ order.createdAt | date:'dd.MM.yyyy' }}</span>
                     <span class="text-[10px] text-gray-400 font-medium italic">#{{ order.id.substring(0,8) }}</span>
                   </div>
 
                   <div class="flex flex-col hidden md:flex">
-                    <span class="text-[10px] uppercase font-black text-gray-400 tracking-widest mb-1">Grad</span>
                     <span class="text-sm font-bold text-gray-700 truncate">📍 {{ order.city }}</span>
                   </div>
 

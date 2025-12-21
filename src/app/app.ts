@@ -12,7 +12,9 @@ import { Chatbox } from "./components/chatbox/chatbox";
     <div class="h-[calc(100%-64px)] overflow-auto">
       <router-outlet />
     </div>
-    <app-chatbox />
+    <div class="fixed bottom-6 right-6 z-[1000]">
+      <app-chatbox />
+    </div>
     
   `,
   styles: [],
